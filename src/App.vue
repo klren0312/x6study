@@ -70,6 +70,13 @@ export default {
         mousewheel: {
           enabled: true,
           modifiers: ['ctrl', 'meta']
+        },
+        keyboard: {
+          enabled: true
+        },
+        clipboard: {
+          enabled: true,
+          useLocalStorage: true,
         }
       })
       this.history = graph.history
@@ -135,6 +142,40 @@ export default {
       graph.on('node:mouseleave', ({ node }) => {
         node.removeTools()
       })
+
+      graph.on('cell:removed', ({ view, e }) => {
+        this.graphData = graph.toJSON()
+        if (this.viewGraph) {
+          this.viewGraph.fromJSON(this.graphData)
+        }
+      })
+
+      graph.bindKey('ctrl+c', () => {
+        const cells = graph.getSelectedCells()
+        if (cells.length) {
+          graph.copy(cells)
+        }
+        return false
+      })
+
+      graph.bindKey('ctrl+v', () => {
+        if (!graph.isClipboardEmpty()) {
+          const cells = graph.paste({ offset: 32 })
+          graph.cleanSelection()
+          graph.select(cells)
+        }
+        return false
+      })
+
+      graph.bindKey('delete', () => {
+        const cells = graph.getSelectedCells()
+        cells.forEach(cell => {
+          cell.remove()
+        })
+        return false
+      })
+
+      // graph.getSelectedCells()
     },
     undo() {
       this.history.undo()
