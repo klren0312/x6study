@@ -1,7 +1,13 @@
 <template>
   <div id="app">
-    <div class="app-stencil" ref="stencil" />
-    <div class="app-content" ref="content" />
+    <div class="ctrl-btn-group">
+      <button @click="undo">undo</button>
+      <button @click="redo">redo</button>
+    </div>
+    <div class="graph">
+      <div class="app-stencil" ref="stencil" />
+      <div class="app-content" ref="content" />
+    </div>
   </div>
 </template>
 
@@ -11,33 +17,41 @@ const { Stencil } = Addon
 const { Rect } = Shape
 export default {
   name: 'App',
+  data() {
+    return {
+      history: null
+    }
+  },
   mounted() {
     this.init()  
   },
   methods: {
     init() {
       const graph = new Graph({
-        selecting: {
+        selecting: { // 可选择
           enabled: true,
           rubberband: true,
           movable: true
         },
         container: document.querySelector('.app-content'),
-        grid: {
+        grid: { // 网格
           size: 10,
           visible: true,
           type: 'mesh'
         },
-        snapline: {
+        snapline: { // 对齐线
           enabled: true,
           sharp: true,
         },
         translating: {
           restrict: true, // 将移动范围限制在画布距离画布边缘 20px 处
+        },
+        history: { // 保存历史操作
+          enabled: true,
+          ignoreChange: true
         }
       })
-
-      // graph.centerContent()
+      this.history = graph.history
 
       const stencil = new Stencil({
         title: '座位',
@@ -87,9 +101,9 @@ export default {
         node.addTools({
           name: 'button-remove',
           args: {
-            x: 0,
+            x: '100%',
             y: 0,
-            offset: { x: 10, y: 10 },
+            offset: { x: -10, y: 10 }
           },
         })
       })
@@ -97,13 +111,27 @@ export default {
       graph.on('node:mouseleave', ({ node }) => {
         node.removeTools()
       })
+    },
+    undo() {
+      this.history.undo()
+    },
+    redo() {
+      this.history.redo()
     }
   }
 }
 </script>
 
 <style>
+body {
+  padding: 0;
+  margin: 0;
+}
 #app {
+  display: flex;
+  flex-direction: column;
+}
+.graph {
   font-family: sans-serif;
   padding: 0;
   display: flex;
