@@ -8,7 +8,7 @@
 <script>
 import { Graph, Addon, Shape } from '@antv/x6'
 const { Stencil } = Addon
-const { Rect, Circle } = Shape
+const { Rect } = Shape
 export default {
   name: 'App',
   mounted() {
@@ -17,79 +17,86 @@ export default {
   methods: {
     init() {
       const graph = new Graph({
+        selecting: {
+          enabled: true,
+          rubberband: true,
+          movable: true
+        },
         container: document.querySelector('.app-content'),
-        grid: true,
+        grid: {
+          size: 10,
+          visible: true,
+          type: 'mesh'
+        },
         snapline: {
           enabled: true,
           sharp: true,
+        },
+        translating: {
+          restrict: true, // 将移动范围限制在画布距离画布边缘 20px 处
         }
-        // scroller: {
-        //   enabled: true,
-        //   pageVisible: false,
-        //   pageBreak: false,
-        //   pannable: true,
-        // },
       })
 
-      graph.centerContent()
+      // graph.centerContent()
 
       const stencil = new Stencil({
-        title: 'Components',
+        title: '座位',
         target: graph,
         search(cell, keyword) {
           return cell.shape.indexOf(keyword) !== -1
         },
-        placeholder: 'Search by shape name',
-        notFoundText: 'Not Found',
+        placeholder: '搜索',
+        notFoundText: '空',
         collapsable: true,
         stencilGraphWidth: 200,
         stencilGraphHeight: 180,
         groups: [
           {
             name: 'group1',
-            title: 'Group(Collapsable)',
+            title: '名称',
           }
         ],
       })
       document.querySelector('.app-stencil').appendChild(stencil.container)
 
-      const r = new Rect({
+      const seat1 = new Rect({
         width: 70,
         height: 40,
         attrs: {
-          rect: { fill: '#31D0C6', stroke: '#4B4A67', strokeWidth: 6 },
-          text: { text: 'rect', fill: 'white' },
-        },
+          rect: { fill: '#31D0C6', strokeWidth: 0 },
+          text: { text: '2', fill: 'white' },
+        }
       })
 
-      const c = new Circle({
-        width: 60,
-        height: 60,
-        attrs: {
-          circle: { fill: '#FE854F', strokeWidth: 6, stroke: '#4B4A67' },
-          text: { text: 'ellipse', fill: 'white' },
-        },
-      })
-
-      const c2 = new Circle({
-        width: 60,
-        height: 60,
-        attrs: {
-          circle: { fill: '#4B4A67', 'stroke-width': 6, stroke: '#FE854F' },
-          text: { text: 'ellipse', fill: 'white' },
-        },
-      })
-
-      const r2 = new Rect({
+      const seat2 = new Rect({
         width: 70,
-        height: 40,
+        height: 70,
         attrs: {
-          rect: { fill: '#4B4A67', stroke: '#31D0C6', strokeWidth: 6 },
-          text: { text: 'rect', fill: 'white' },
-        },
+          rect: { fill: '#31D0C6', strokeWidth: 0 },
+          text: { text: '4', fill: 'white' },
+        }
       })
 
-      stencil.load([r, c, c2, r2.clone()], 'group1') 
+      stencil.load([seat1, seat2], 'group1')
+
+      graph.on('cell:change:*', () => {
+        console.log(graph.toJSON())
+      })
+
+      graph.on('node:mouseenter', ({ node }) => {
+        node.addTools({
+          name: 'button-remove',
+          args: {
+            x: 0,
+            y: 0,
+            offset: { x: 10, y: 10 },
+          },
+        })
+      })
+
+      graph.on('node:mouseleave', ({ node }) => {
+        node.removeTools()
+      })
     }
   }
 }
