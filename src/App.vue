@@ -1,9 +1,5 @@
 <template>
   <div id="app">
-    <div class="ctrl-btn-group">
-      <button @click="undo">undo</button>
-      <button @click="redo">redo</button>
-    </div>
     <div class="graph">
       <div class="app-stencil"/>
       <div class="app-content"/>
@@ -164,6 +160,16 @@ export default {
           graph.cleanSelection()
           graph.select(cells)
         }
+        return false
+      })
+
+      graph.bindKey('ctrl+z', () => {
+        this.undo()
+        return false
+      })
+
+      graph.bindKey('ctrl+y', () => {
+        this.redo()
         return false
       })
 
