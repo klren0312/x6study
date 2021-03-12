@@ -5,8 +5,9 @@
       <button @click="redo">redo</button>
     </div>
     <div class="graph">
-      <div class="app-stencil" ref="stencil" />
-      <div class="app-content" ref="content" />
+      <div class="app-stencil"/>
+      <div class="app-content"/>
+      <div class="graph-view"></div>
     </div>
   </div>
 </template>
@@ -19,19 +20,27 @@ export default {
   name: 'App',
   data() {
     return {
-      history: null
+      history: null,
+      graphData: [],
+      viewGraph: null
     }
   },
   mounted() {
-    this.init()  
+    this.init()
+    this.initView() 
   },
   methods: {
     init() {
       const graph = new Graph({
+        width: 500,
+        height: 400,
         selecting: { // 可选择
+          className: 'select-border',
           enabled: true,
           rubberband: true,
-          movable: true
+          movable: true,
+          modifiers: 'ctrl',
+          showNodeSelectionBox: true
         },
         container: document.querySelector('.app-content'),
         grid: { // 网格
@@ -49,6 +58,18 @@ export default {
         history: { // 保存历史操作
           enabled: true,
           ignoreChange: true
+        },
+        scroller: { // 滚动条
+          enabled: true,
+          autoResize: false,
+          visibility: 1,
+          pageVisible: true,
+          pageBreak: true,
+          pannable: true
+        },
+        mousewheel: {
+          enabled: true,
+          modifiers: ['ctrl', 'meta']
         }
       })
       this.history = graph.history
@@ -94,7 +115,10 @@ export default {
       stencil.load([seat1, seat2], 'group1')
 
       graph.on('cell:change:*', () => {
-        console.log(graph.toJSON())
+        this.graphData = graph.toJSON()
+        if (this.viewGraph) {
+          this.viewGraph.fromJSON(this.graphData)
+        }
       })
 
       graph.on('node:mouseenter', ({ node }) => {
@@ -117,6 +141,26 @@ export default {
     },
     redo() {
       this.history.redo()
+    },
+    initView() {
+      this.viewGraph = new Graph({
+        width: 500,
+        height: 400,
+        container: document.querySelector('.graph-view'),
+        translating: {
+          restrict: true, // 将移动范围限制在画布距离画布边缘 20px 处
+        },
+        selecting: {
+          enabled: true,
+        },
+        interacting: {
+          nodeMovable: false
+        },
+        mousewheel: {
+          enabled: true,
+          modifiers: ['ctrl', 'meta']
+        }
+      }).fromJSON(this.graphData)
     }
   }
 }
@@ -137,7 +181,9 @@ body {
   display: flex;
   padding: 16px 8px;
 }
-
+.select-border {
+  border: 1px dashed #ff0000;
+}
 .app-stencil {
   width: 200px;
   border: 1px solid #f0f0f0;
